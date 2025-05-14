@@ -22,12 +22,12 @@ app.add_middleware(
 # Load LLM and prompt
 llm = OllamaLLM(model="gemma2:2b")
 prompt = ChatPromptTemplate.from_template("""
-You are an expert in answering questions about a pizza restaurant.
+You are an expert assistant helping answer questions about customer information.
 
-Here are some relevant reviews:
-{reviews}
+Here are some relevant customer records:
+{customers}
 
-Here is the question to answer:
+Question:
 {question}
 """)
 chain = prompt | llm
@@ -42,7 +42,7 @@ async def upload_csv(file: UploadFile = File(...)):
     global retriever
     os.makedirs("temp", exist_ok=True)
     file_path = f"temp/{file.filename}"
-
+    print("success")
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
@@ -59,7 +59,8 @@ async def ask_question(payload: QuestionRequest):
         return {"error": "Please upload a CSV first."}
 
     relevant_docs = retriever.invoke(payload.question)
-    reviews = "\n".join([doc.page_content for doc in relevant_docs])
-    answer = chain.invoke({"reviews": reviews, "question": payload.question})
+    customers = "\n".join([doc.page_content for doc in relevant_docs])
+    answer = chain.invoke({"customers": customers, "question": payload.question})
+    print(payload.question)
 
     return {"answer": answer}
